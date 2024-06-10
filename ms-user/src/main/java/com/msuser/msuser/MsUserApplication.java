@@ -1,17 +1,16 @@
-package com.api.ms_transaction;
+package com.msuser.msuser;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
+
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableFeignClients
-public class MsTransactionApplication {
+public class MsUserApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(MsTransactionApplication.class, args);
+		SpringApplication.run(MsUserApplication.class, args);
 	}
 
 }

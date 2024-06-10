@@ -6,10 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract class Converter {
-    private static final String COP = "COP";
-    private static final String USD = "USD";
-    private static final String EUR = "EUR";
-    private static final String ARS = "ARS";
+    public static final String COP = "COP";
+    public static final String USD = "USD";
+    public static final String EUR = "EUR";
+    public static final String ARS = "ARS";
 
     public static Map<String, Map<String, BigDecimal>> getCurrenciesRates() {
 

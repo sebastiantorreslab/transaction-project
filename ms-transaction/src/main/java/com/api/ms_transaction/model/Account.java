@@ -2,15 +2,14 @@ package com.api.ms_transaction.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
 
 @Entity
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 public class Account {
@@ -19,15 +18,16 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private BigDecimal id;
 
-    @NaturalId
     @UuidGenerator
-    private String accountId;
+    private String account_ref;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
-    @OneToOne
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
     private AccountDetail accountDetail;
+
+
 
 
 }

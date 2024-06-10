@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -27,14 +28,14 @@ public abstract class AccountManagement {
 
     public static void transactionsManage(Account account){
         Set<Transaction> accountTransactions = new HashSet<>();
-        Map<String, Set<Transaction>> transactions = new HashMap<>();
+        Map<BigDecimal, Set<Transaction>> transactions = new HashMap<>();
 
         if(account != null){
             Set<Transaction> incomingTransactions = account.getAccountDetail().getIncomingTransactions();
             Set<Transaction> outgoingTransactions = account.getAccountDetail().getOutgoingTransactions();
             accountTransactions.addAll(incomingTransactions);
             accountTransactions.addAll(outgoingTransactions);
-            transactions.put(account.getAccountId(),accountTransactions);
+            transactions.put(account.getId(),accountTransactions);
         }
     }
 

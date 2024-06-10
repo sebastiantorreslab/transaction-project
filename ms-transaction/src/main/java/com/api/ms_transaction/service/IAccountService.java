@@ -3,6 +3,7 @@ package com.api.ms_transaction.service;
 import com.api.ms_transaction.model.Account;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.math.BigDecimal;
 
@@ -10,7 +11,7 @@ public interface IAccountService {
 
     Account findById(BigDecimal  id);
     Page<Account> findAll(Pageable pageable);
-    Account createAccount(Account account);
+    void createAccount(String token);
     Account updateAccount(BigDecimal  id, Account account); // todo: solo setea si la account está activa o no
     void deleteAccount(BigDecimal  id);
     void processTransaction(BigDecimal  sourceAccountId, BigDecimal destinationAccountId, BigDecimal amount, String TransactionType); // todo possible strategy.

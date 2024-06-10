@@ -1,20 +1,10 @@
 server:
-  port: 8083
+  port: 8082
+  context-path: /user/
 
 spring:
   application:
-    name: ms-transaction
-
-  datasource:
-    url: jdbc:mysql://localhost:3310/transaction_db
-    username: user-transaction
-    password: transaction-pass
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
-
+    name: ms-user
   security:
     oauth2:
       resourceserver:
@@ -22,6 +12,18 @@ spring:
           issuer-uri: http://localhost:9090/realms/triwal-realm-dev
           jwk-set-uri: http://localhost:9090/realms/triwal-realm-dev/protocol/openid-connect/certs
 
+# ESTO ME PERMITE ENVIAR EL LINK AL CORREO PARA HABILITAR NUEVAMENTE LA CUENTA
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: triwalwebapp@gmail.com
+    password: ${PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 eureka:
   client:
@@ -44,3 +46,6 @@ jwtConverter:
       main-attr: preferred_username
 
 
+logging:
+  level:
+    root: info
