@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 
 @Repository
-public interface IAccountRepository extends JpaRepository<Account,BigDecimal> {
+public interface IAccountRepository extends JpaRepository<Account,Long> {
 }

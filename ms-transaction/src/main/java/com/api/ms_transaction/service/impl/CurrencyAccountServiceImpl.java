@@ -22,6 +22,16 @@ public class CurrencyAccountServiceImpl implements ICurrencyAccountService {
     }
 
     @Override
+    public Boolean existsCurrencyAccountByCountry(String country) {
+        return currencyAccountRepository.existsCurrencyAccountByCountry(country.toLowerCase());
+    }
+
+    @Override
+    public CurrencyAccount findCurrencyAccountByCountry(String country) {
+        return currencyAccountRepository.findCurrencyAccountByCountry(country.toLowerCase());
+    }
+
+    @Override
     public void create(CurrencyAccount currencyAccount) {
         currencyAccountRepository.save(currencyAccount);
 

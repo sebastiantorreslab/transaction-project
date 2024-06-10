@@ -8,7 +8,6 @@ import javax.print.attribute.standard.DateTimeAtCreation;
 import java.math.BigDecimal;
 
 @Entity
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -16,8 +15,8 @@ import java.math.BigDecimal;
 public class Transaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private BigDecimal id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String currencyOrigin;
     private String currencyDestination;

@@ -1,60 +1,71 @@
 package com.api.ms_transaction.model;
 
+import com.api.ms_transaction.repository.ICurrencyAccountRepository;
+import com.api.ms_transaction.service.ICurrencyAccountService;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.math.BigDecimal;
-import java.util.Objects;
+import java.util.HashSet;
+import java.util.Set;
 
 import static com.api.ms_transaction.util.Converter.*;
 
 @Entity
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 public class CurrencyAccount {
 
+
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private BigDecimal id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String code;
     private String country;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "accountDetail_id")
-    private AccountDetail accountDetail;
+    @OneToMany(mappedBy = "accountCurrency")
+    @JsonIgnore
+    private Set<AccountDetail> accountDetailSet = new HashSet<>();
 
-    public static CurrencyAccount setCurrencyAccount(String country){
 
-        CurrencyAccount currencyAccount = new CurrencyAccount();
+    public static CurrencyAccount setCurrencyAccount(String country, ICurrencyAccountService currencyAccountService) {
+        CurrencyAccount currencyAccount;
 
-        if(Objects.equals(country, "colombia")){
-            currencyAccount.code = COP;
-            currencyAccount.country = "colombia";
+        if (currencyAccountService.existsCurrencyAccountByCountry(country)) {
+            currencyAccount = currencyAccountService.findCurrencyAccountByCountry(country);
+        } else {
+            currencyAccount = new CurrencyAccount();
+            if (country.equalsIgnoreCase("colombia")) {
+                currencyAccount.code = COP;
+                currencyAccount.country = "colombia";
+            }
+            if (country.equalsIgnoreCase("argentina")) {
+                currencyAccount.code = ARS;
+                currencyAccount.country = "argentina";
+            }
+            if (country.equalsIgnoreCase("usa")) {
+                currencyAccount.code = USD;
+                currencyAccount.country = "united states";
+
+            } else if (!country.isEmpty() && !country.equalsIgnoreCase("colombia") && !country.equalsIgnoreCase("argentina") && !country.equalsIgnoreCase("usa")) {
+                currencyAccount.code = EUR;
+                currencyAccount.country = country;
+            }
+
         }
-        if(Objects.equals(country, "argentina")){
-            currencyAccount.code = ARS;
-            currencyAccount.country = "argentina";
-        }
-        if(Objects.equals(country, "usa")){
-            currencyAccount.code = USD;
-            currencyAccount.country = "united states";
-
-        }
-        else if (!country.isEmpty() && !country.equalsIgnoreCase("colombia") && !country.equalsIgnoreCase("argentina") && !country.equalsIgnoreCase("usa")){
-            currencyAccount.code = EUR;
-            currencyAccount.country = country;
-        }
-
+        currencyAccountService.create(currencyAccount);
         return currencyAccount;
     }
 
-
-
-
-
+    public void addAccountToCurrencyAccount(AccountDetail accountDetail) {
+        accountDetailSet.add(accountDetail);
+        accountDetail.setAccountCurrency(this);
+    }
 
 
 

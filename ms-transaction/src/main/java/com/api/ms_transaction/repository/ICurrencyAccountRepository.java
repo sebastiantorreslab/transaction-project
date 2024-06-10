@@ -7,5 +7,9 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 @Repository
-public interface ICurrencyAccountRepository extends JpaRepository<CurrencyAccount,BigDecimal> {
+public interface ICurrencyAccountRepository extends JpaRepository<CurrencyAccount,Long> {
+
+    Boolean existsCurrencyAccountByCountry(String country);
+
+    CurrencyAccount findCurrencyAccountByCountry(String country);
 }

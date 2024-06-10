@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @Service
 public class TransactionServiceImpl implements ITransactionService {
     @Override
-    public Transaction findById(BigDecimal id) {
+    public Transaction findById(Long id) {
         return null;
     }
 
@@ -26,12 +26,12 @@ public class TransactionServiceImpl implements ITransactionService {
     }
 
     @Override
-    public Transaction updateTransaction(BigDecimal id, Transaction transaction) {
+    public Transaction updateTransaction(Long id, Transaction transaction) {
         return null;
     }
 
     @Override
-    public void deleteTransaction(BigDecimal id) {
+    public void deleteTransaction(Long id) {
 
     }
 

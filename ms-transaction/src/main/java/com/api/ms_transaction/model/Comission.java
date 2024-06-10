@@ -19,8 +19,8 @@ import java.math.BigDecimal;
 public class Comission {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private BigDecimal Id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private final Double COMMISION_RATE = 0.01;
     private BigDecimal balance;
     private DateTimeAtCreation createAt;

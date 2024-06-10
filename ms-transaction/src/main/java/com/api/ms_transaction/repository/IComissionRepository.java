@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 @Repository
-public interface IComissionRepository extends JpaRepository<Comission,BigDecimal> {
+public interface IComissionRepository extends JpaRepository<Comission,Long> {
 
 }

@@ -4,14 +4,12 @@ import com.api.ms_transaction.model.Transaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.math.BigDecimal;
-
 public interface ITransactionService {
 
-    Transaction findById(BigDecimal id);
+    Transaction findById(Long id);
     Page<Transaction> findAll(Pageable pageable);
     Transaction createTransaction(Transaction transaction);
-    Transaction updateTransaction(BigDecimal id, Transaction transaction);
-    void deleteTransaction(BigDecimal id);
+    Transaction updateTransaction(Long id, Transaction transaction);
+    void deleteTransaction(Long id);
     Boolean IsSuccess(Transaction transaction);
 }

@@ -28,7 +28,7 @@ public abstract class AccountManagement {
 
     public static void transactionsManage(Account account){
         Set<Transaction> accountTransactions = new HashSet<>();
-        Map<BigDecimal, Set<Transaction>> transactions = new HashMap<>();
+        Map<Long, Set<Transaction>> transactions = new HashMap<>();
 
         if(account != null){
             Set<Transaction> incomingTransactions = account.getAccountDetail().getIncomingTransactions();

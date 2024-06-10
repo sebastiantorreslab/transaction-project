@@ -36,6 +36,7 @@ public class AccountServiceImpl implements IAccountService {
 
     private final IUserService userService;
 
+
     private final ICurrencyAccountService currencyAccountService;
 
     private final JwtAuthConverter jwtAuthConverter;
@@ -50,7 +51,7 @@ public class AccountServiceImpl implements IAccountService {
 
 
     @Override
-    public Account findById(BigDecimal id) {
+    public Account findById(Long id) {
         return accountRepository.findById(id).orElse(null);
     }
 
@@ -62,69 +63,73 @@ public class AccountServiceImpl implements IAccountService {
     @Override
     public void createAccount(String token) {
 
+        User user;
         String username = extractPreferredUsername(token);
+        List<UserRepresentation> userRepresentation = getUserFromFeignClient(username);
+        if (username != null) {
 
-        if( username != null){
+            user = userService.instanciateUser(userRepresentation);
 
-            List<UserRepresentation> userRepresentation = getUserFromFeignClient(username);
-
-            User user = new User();
             user.setUserIdentifier(userRepresentation.get(0).getId());
             user.setUserName(userRepresentation.get(0).getUsername());
             user.setFirstName(userRepresentation.get(0).getFirstName());
             user.setLastName(userRepresentation.get(0).getLastName());
             user.setCountry(userRepresentation.get(0).firstAttribute("country"));
-            userService.createUserTenant(user);
+
 
             Account account = new Account();
             AccountDetail accountDetail = new AccountDetail();
+            CurrencyAccount currencyAccount = setCurrencyAccount(userRepresentation.get(0).firstAttribute("country"),currencyAccountService);
+
 
             accountDetail.setBalance(INIT_CAPITAL);
-            CurrencyAccount currencyAccount = setCurrencyAccount(userRepresentation.get(0).firstAttribute("country"));
-            currencyAccountService.create(currencyAccount);
-
-            accountDetail.setAccountCurrency(currencyAccount);
             accountDetail.setCreateAt(new DateTimeAtCreation(new Date()).getValue());
             accountDetail.setIsEnabled(true);
             accountDetail.setCreatedBy(userRepresentation.get(0).getUsername());
             accountDetail.setLastUpdateAt(new DateTimeAtCreation(new Date()).getValue());
 
+            //relations
+
+            currencyAccount.addAccountToCurrencyAccount(accountDetail);
             account.setAccountDetail(accountDetail);
-            account.setUser(user);
-            accountRepository.save(account);
-        }else {
+
+            //relations
+            user.addAccount(account);
+            userService.createUserTenant(user);
+        } else {
             throw new RuntimeException("Error creating new account");
         }
 
     }
 
-    private List<UserRepresentation> getUserFromFeignClient(String username) {
+    public List<UserRepresentation> getUserFromFeignClient(String username) {
         ResponseEntity<List<UserRepresentation>> response = userClient.getUserByUserName(username);
         return response.getBody();
     }
 
+
     @Override
-    public Account updateAccount(BigDecimal id, Account account) {
+    public Account updateAccount(Long id, Account account) {
         return null;
     }
 
     @Override
-    public void deleteAccount(BigDecimal id) {
+    public void deleteAccount(Long id) {
 
     }
 
     @Override
-    public void processTransaction(BigDecimal sourceAccountId, BigDecimal destinationAccountId, BigDecimal amount, String TransactionType) {
+    public void processTransaction(String sourceAccountId, String destinationAccountId, BigDecimal amount, String TransactionType) {
 
     }
 
     @Override
-    public void reloadAccount(BigDecimal accountId, BigDecimal amount) {
+    public void reloadAccount(String accountId, BigDecimal amount) {
 
     }
 
     @Override
-    public void withdrawMoney(BigDecimal accountId, BigDecimal amount) {
+    public void withdrawMoney(String accountId, BigDecimal amount) {
 
     }
 
