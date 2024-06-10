@@ -5,10 +5,12 @@ import com.api.ms_transaction.repository.IUserRepository;
 import com.api.ms_transaction.service.IUserService;
 import org.keycloak.representations.account.UserRepresentation;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional
 public class UserServiceImpl implements IUserService {
 
     private final IUserRepository userRepository;
@@ -49,6 +51,11 @@ public class UserServiceImpl implements IUserService {
             user = new User();
             return user;
         }
+    }
+
+    @Override
+    public User findUserByAccountRef(String accountRef) {
+        return null;
     }
 
 

@@ -19,7 +19,7 @@ public class Account {
     private Long id;
 
     @UuidGenerator
-    private String account_ref;
+    private String accountRef;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -41,7 +41,7 @@ public class Account {
     public String toString() {
         return "Account{" +
                 "id=" + id +
-                ", account_ref='" + account_ref + '\'' +
+                ", accountRef='" + accountRef + '\'' +
                 ", accountDetail=" + accountDetail +
                 '}';
     }

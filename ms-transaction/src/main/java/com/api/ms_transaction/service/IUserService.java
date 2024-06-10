@@ -9,10 +9,9 @@ public interface IUserService {
 
     User findById(Long id);
     Boolean existByUserName(String username);
-
     User findByUserName(String username);
     void createUserTenant(User user);
-
     User instanciateUser(List<UserRepresentation> userRepresentation);
+    User findUserByAccountRef(String accountRef);
 
 }

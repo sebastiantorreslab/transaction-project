@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 public interface IAccountService {
 
@@ -14,10 +15,13 @@ public interface IAccountService {
     void createAccount(String token);
     Account updateAccount(Long  id, Account account); // todo: solo setea si la account está activa o no
     void deleteAccount(Long  id);
-    void processTransaction(String sourceAccountId, String destinationAccountId, BigDecimal amount, String TransactionType); // todo possible strategy.
-    void reloadAccount(String accountId, BigDecimal amount);
-    void withdrawMoney(String accountId, BigDecimal amount);
-    BigDecimal validateBalance(Account account, String userId);
+    void processTransaction(String sourceAccountRef, String destinationAccountRef, BigDecimal amount, String TransactionType); // todo possible strategy.
+    void reloadAccount(String accountRef, BigDecimal amount);
+    void withdrawMoney(String accountRef, BigDecimal amount);
+    Account  validateAccount(String accountRef);
+    Set<Account> getAccountsByUsername(String username);
+    Boolean validateAccountByUsername(String username);
 
-    Boolean IsCreated(Account account);
+
+
 }
