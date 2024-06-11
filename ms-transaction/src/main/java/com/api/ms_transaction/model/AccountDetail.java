@@ -59,8 +59,8 @@ public class AccountDetail {
     }
 
     public void add(Transaction transaction, Account source, Account destination) {
-        incomingTransactions.add(transaction);
-        outgoingTransactions.add(transaction);
+        this.incomingTransactions.add(transaction);
+        this.outgoingTransactions.add(transaction);
         transaction.setSourceAccount(source.getAccountDetail());
         transaction.setDestinationAccount(destination.getAccountDetail());
     }

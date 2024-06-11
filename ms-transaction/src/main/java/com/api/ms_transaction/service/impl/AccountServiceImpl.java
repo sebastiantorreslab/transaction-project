@@ -146,15 +146,16 @@ public class AccountServiceImpl implements IAccountService {
                         transaction.setCreatedBy(userService.findUserByAccountRef(fromAccount.getAccountRef()).getUserName());
 
                         try{
-                            newSourceBalance = fromAccount.getAccountDetail().getBalance().subtract(amount);
+                            BigDecimal currentFromBalance = fromAccount.getAccountDetail().getBalance();
+                            fromAccount.getAccountDetail().setBalance(currentFromBalance.subtract(amount));
                             if(!Objects.equals(originCurrency, targetCurrency)  && isCurrencyCodeAvailable(targetCurrency,toAccount)) {
-                                return setTransaction(fromAccount, toAccount, newSourceBalance, transaction, convertedValue);
+                                return setTransaction(fromAccount, toAccount, transaction, convertedValue);
                             }else if(!isCurrencyCodeAvailable(targetCurrency,toAccount)){
                                 throw new RuntimeException("Currency is no available in this account");
                             }else {
-                                return setTransaction(fromAccount, toAccount, newSourceBalance, transaction, amount);
+                                return setTransaction(fromAccount, toAccount, transaction, amount);
                             }
-                        }catch(RuntimeException e){
+                        }catch(Exception e){
                             e.getCause();
                         }
 
@@ -163,17 +164,18 @@ public class AccountServiceImpl implements IAccountService {
                     }
                 }
             }
-            return newSourceBalance;
+            return null;
         }
 
-    private BigDecimal setTransaction(Account fromAccount, Account toAccount, BigDecimal newSourceBalance, Transaction transaction, BigDecimal convertedValue) {
-        toAccount.getAccountDetail().getBalance().add(convertedValue);
-        transaction.setConvertedAmount(convertedValue);
+    private BigDecimal setTransaction(Account fromAccount, Account toAccount,Transaction transaction, BigDecimal value) {
+        BigDecimal currentToBalance = toAccount.getAccountDetail().getBalance();
+        toAccount.getAccountDetail().setBalance(currentToBalance.add(value));
+        transaction.setConvertedAmount(value);
         transaction.setStatus("1");
         fromAccount.getAccountDetail().add(transaction,fromAccount,toAccount);
         accountRepository.save(fromAccount);
         accountRepository.save(toAccount);
-        return newSourceBalance;
+        return fromAccount.getAccountDetail().getBalance();
     }
 
     ;
