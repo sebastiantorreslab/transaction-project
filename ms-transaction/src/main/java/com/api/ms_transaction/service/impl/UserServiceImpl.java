@@ -55,7 +55,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public User findUserByAccountRef(@Param("accountRef") String accountRef) {
+    public User findUserByAccountRef(String accountRef) {
         return userRepository.findUserByAccountRef(accountRef);
     }
 

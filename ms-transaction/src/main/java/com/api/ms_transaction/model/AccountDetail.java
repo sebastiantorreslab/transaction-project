@@ -7,6 +7,7 @@ import lombok.*;
 import javax.print.attribute.standard.DateTimeAtCreation;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -37,11 +38,11 @@ public class AccountDetail {
     private String createdBy;
     private Date lastUpdateAt;
 
-    @OneToMany(mappedBy = "sourceAccount", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Transaction> outgoingTransactions;
+    @OneToMany(mappedBy = "sourceAccount", cascade = {CascadeType.MERGE,CascadeType.PERSIST}, orphanRemoval = true)
+    private Set<Transaction> incomingTransactions = new HashSet<>();
 
-    @OneToMany(mappedBy = "destinationAccount", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Transaction> incomingTransactions;
+    @OneToMany(mappedBy = "destinationAccount", cascade = {CascadeType.MERGE,CascadeType.PERSIST}, orphanRemoval = true)
+    private Set<Transaction> outgoingTransactions = new HashSet<>();
 
 
     @Override
@@ -55,5 +56,12 @@ public class AccountDetail {
                 ", createdBy='" + createdBy + '\'' +
                 ", lastUpdateAt=" + lastUpdateAt +
                 '}';
+    }
+
+    public void add(Transaction transaction, Account source, Account destination) {
+        incomingTransactions.add(transaction);
+        outgoingTransactions.add(transaction);
+        transaction.setSourceAccount(source.getAccountDetail());
+        transaction.setDestinationAccount(destination.getAccountDetail());
     }
 }

@@ -1,5 +1,6 @@
 package com.api.ms_transaction.controller;
 
+import com.api.ms_transaction.registry.request.transactionRequestDTO;
 import com.api.ms_transaction.service.IAccountService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -46,6 +47,13 @@ public class AccountController {
         String token = tokenHeader.substring(7);
         BigDecimal newBalance = accountService.withdrawFunds(accountRef,amount,token);
         return new ResponseEntity<>("Successful withdrawal, your new balance is "+ newBalance ,HttpStatus.ACCEPTED);
+    }
+
+    @PostMapping("/transaction")
+    public ResponseEntity<?> processTransaction(@RequestBody transactionRequestDTO transactionRequestDTO, @RequestHeader("Authorization") String tokenHeader ){
+        String token = tokenHeader.substring(7);
+        BigDecimal newBalance = accountService.processTransaction(transactionRequestDTO.currencyOrigin(),transactionRequestDTO.currencyDestination(),transactionRequestDTO.sourceAccountRef(),transactionRequestDTO.destinationAccountRef(),transactionRequestDTO.amount(),transactionRequestDTO.transactionType(),token);
+    return new ResponseEntity<>("Transtaction succedfull you updtated balance is: " + newBalance,HttpStatus.ACCEPTED);
     }
 
 

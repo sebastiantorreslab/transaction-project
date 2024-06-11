@@ -1,11 +1,9 @@
 package com.api.ms_transaction.service.impl;
 
 import com.api.ms_transaction.client.UserClient;
-import com.api.ms_transaction.model.Account;
-import com.api.ms_transaction.model.AccountDetail;
-import com.api.ms_transaction.model.CurrencyAccount;
-import com.api.ms_transaction.model.User;
+import com.api.ms_transaction.model.*;
 import com.api.ms_transaction.repository.IAccountRepository;
+import com.api.ms_transaction.repository.ITransactionRepository;
 import com.api.ms_transaction.service.IAccountService;
 import com.api.ms_transaction.service.ICurrencyAccountService;
 import com.api.ms_transaction.service.IUserService;
@@ -18,12 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.print.attribute.standard.DateTimeAtCreation;
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static com.api.ms_transaction.model.CurrencyAccount.setCurrencyAccount;
+import static com.api.ms_transaction.util.Converter.currencyConverter;
 import static com.api.ms_transaction.util.InitCapital.INIT_CAPITAL;
 import static com.api.ms_transaction.util.JwtUtil.extractPreferredUsername;
 
@@ -36,11 +32,14 @@ public class AccountServiceImpl implements IAccountService {
     private final IUserService userService;
     private final ICurrencyAccountService currencyAccountService;
 
-    public AccountServiceImpl(IAccountRepository accountRepository, UserClient userClient, IUserService userService, ICurrencyAccountService currencyAccountService) {
+    private final ITransactionRepository transactionRepository;
+
+    public AccountServiceImpl(IAccountRepository accountRepository, UserClient userClient, IUserService userService, ICurrencyAccountService currencyAccountService, ITransactionRepository transactionRepository) {
         this.accountRepository = accountRepository;
         this.userClient = userClient;
         this.userService = userService;
         this.currencyAccountService = currencyAccountService;
+        this.transactionRepository = transactionRepository;
     }
 
     @Override
@@ -110,14 +109,83 @@ public class AccountServiceImpl implements IAccountService {
     }
 
     @Override
-    public void processTransaction(String sourceAccountRef, String destinationAccountRef, BigDecimal amount, String TransactionType) {
+    public BigDecimal processTransaction(String originCurrency, String targetCurrency, String sourceAccountRef, String destinationAccountRef, BigDecimal amount, String transactionType, String token) {
 
+            if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Must transfer a positive amount of money");
+            }
+
+            Account fromAccount;
+            Account toAccount;
+            BigDecimal newSourceBalance = null;
+
+            fromAccount = validateAccount(sourceAccountRef,token);
+            if(fromAccount.getAccountRef().isEmpty()){
+                throw new RuntimeException("Source account not found");
+            }
+            toAccount = validateAccount(destinationAccountRef,token);
+            if(toAccount.getAccountRef().isEmpty()){
+                throw new RuntimeException("Destination account not found");
+            }
+            if(Objects.equals(targetCurrency, "") && Objects.equals(targetCurrency, "")){
+                throw new RuntimeException("Currency does not exist");
+            }
+
+            if(fromAccount.getAccountDetail().getIsEnabled() && toAccount.getAccountDetail().getIsEnabled()){
+                if(fromAccount.getAccountRef().equals(sourceAccountRef) && toAccount.getAccountRef().equals(destinationAccountRef)){
+                    if (validationBalance(fromAccount,amount)) {
+
+                        Transaction transaction = new Transaction();
+                        transaction.setCurrencyOrigin(originCurrency);
+                        transaction.setCurrencyDestination(targetCurrency);
+                        transaction.setCreateAt(new DateTimeAtCreation(new Date()).getValue());
+                        transaction.setAmount(amount);
+                        transaction.setTransactionType(transactionType); // todo implement a method for validate internal transfer accounts from the same user or external different users
+                        BigDecimal convertedValue =  currencyConverter(amount,originCurrency,targetCurrency);
+                        transaction.setConvertedAmount(convertedValue);
+                        transaction.setCreatedBy(userService.findUserByAccountRef(fromAccount.getAccountRef()).getUserName());
+
+                        try{
+                            newSourceBalance = fromAccount.getAccountDetail().getBalance().subtract(amount);
+                            if(!Objects.equals(originCurrency, targetCurrency)  && isCurrencyCodeAvailable(targetCurrency,toAccount)) {
+                                return setTransaction(fromAccount, toAccount, newSourceBalance, transaction, convertedValue);
+                            }else if(!isCurrencyCodeAvailable(targetCurrency,toAccount)){
+                                throw new RuntimeException("Currency is no available in this account");
+                            }else {
+                                return setTransaction(fromAccount, toAccount, newSourceBalance, transaction, amount);
+                            }
+                        }catch(RuntimeException e){
+                            e.getCause();
+                        }
+
+                    }else if(!validationBalance(fromAccount,amount)){
+                        throw new RuntimeException("Insufficient founds");
+                    }
+                }
+            }
+            return newSourceBalance;
+        }
+
+    private BigDecimal setTransaction(Account fromAccount, Account toAccount, BigDecimal newSourceBalance, Transaction transaction, BigDecimal convertedValue) {
+        toAccount.getAccountDetail().getBalance().add(convertedValue);
+        transaction.setConvertedAmount(convertedValue);
+        transaction.setStatus("1");
+        fromAccount.getAccountDetail().add(transaction,fromAccount,toAccount);
+        accountRepository.save(fromAccount);
+        accountRepository.save(toAccount);
+        return newSourceBalance;
     }
+
+    ;
+
+
+
+
 
     @Override
     public BigDecimal reloadFunds(String accountRef, BigDecimal amount, String token) {
         Account account = validateAccount(accountRef, token);
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Reload a positive amount of money");
         }
         if (account.getAccountDetail().getIsEnabled()) {
@@ -134,7 +202,7 @@ public class AccountServiceImpl implements IAccountService {
     @Override
     public BigDecimal withdrawFunds(String accountRef, BigDecimal amount, String token) {
         Account account = validateAccount(accountRef, token);
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Withdraw a positive amount of money");
         }
         if (account.getAccountDetail().getIsEnabled()) {
@@ -174,6 +242,10 @@ public class AccountServiceImpl implements IAccountService {
         return response;
     }
 
+    public Boolean validationBalance(Account account, BigDecimal amount) {
+        return account.getAccountDetail().getBalance().compareTo(amount) >= 0;
+    }
+
     @Override
     public Set<Account> getAccountsByUsername(String username, String tokenUsername) {
         Set<Account> accountSet = new HashSet<>();
@@ -181,6 +253,10 @@ public class AccountServiceImpl implements IAccountService {
             accountSet = accountRepository.findAccountsByUsername(username);
         }
         return accountSet;
+    }
+
+    public Boolean isCurrencyCodeAvailable(String destinationCurrency, Account account){
+        return account.getAccountDetail().getAccountCurrency().getCode().equals(destinationCurrency);
     }
 
 

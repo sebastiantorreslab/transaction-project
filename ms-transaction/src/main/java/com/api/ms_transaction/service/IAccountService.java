@@ -15,7 +15,7 @@ public interface IAccountService {
     void createAccount(String token);
     Account updateAccount(Long  id, Account account); // todo: solo setea si la account está activa o no
     void deleteAccount(Long  id);
-    void processTransaction(String sourceAccountRef, String destinationAccountRef, BigDecimal amount, String TransactionType); // todo possible strategy.
+    BigDecimal processTransaction(String originCurrency, String targetCurrency,String sourceAccountRef, String destinationAccountRef, BigDecimal amount, String transactionType, String token); // todo possible strategy.
     BigDecimal reloadFunds(String accountRef, BigDecimal amount,String token);
     BigDecimal withdrawFunds(String accountRef, BigDecimal amount,String token);
     Account  validateAccount(String accountRef,String token);
