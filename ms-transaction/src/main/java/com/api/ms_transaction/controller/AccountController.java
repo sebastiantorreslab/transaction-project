@@ -7,9 +7,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 
 
 @RestController
+@CrossOrigin(origins = "http://localhost:3333")
 @RequestMapping("/account")
 public class AccountController {
     private final IAccountService accountService;
@@ -29,4 +31,24 @@ public class AccountController {
     public ResponseEntity<?> getAllAccounts(@PageableDefault Pageable pageable){
        return new ResponseEntity<>(accountService.findAll(pageable), HttpStatus.ACCEPTED);
     }
+
+    @PutMapping("/reload")
+    public ResponseEntity<?> reloadAccount(@RequestParam("accountRef") String accountRef,@RequestParam("amount")BigDecimal amount,@RequestHeader("Authorization") String tokenHeader){
+        String token = tokenHeader.substring(7);
+        BigDecimal newBalance = accountService.reloadFunds(accountRef,amount,token);
+        return new ResponseEntity<>("Successful reload, your new balance is "+ newBalance ,HttpStatus.ACCEPTED);
+
+    }
+
+
+    @PutMapping("/withdraw")
+    public ResponseEntity<?> withdrawAccount(@RequestParam("accountRef") String accountRef,@RequestParam("amount") BigDecimal amount,@RequestHeader("Authorization") String tokenHeader){
+        String token = tokenHeader.substring(7);
+        BigDecimal newBalance = accountService.withdrawFunds(accountRef,amount,token);
+        return new ResponseEntity<>("Successful withdrawal, your new balance is "+ newBalance ,HttpStatus.ACCEPTED);
+    }
+
+
+
+
 }

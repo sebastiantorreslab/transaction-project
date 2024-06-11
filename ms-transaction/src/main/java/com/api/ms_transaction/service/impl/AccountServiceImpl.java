@@ -31,7 +31,6 @@ import static com.api.ms_transaction.util.JwtUtil.extractPreferredUsername;
 @Service
 @Transactional
 public class AccountServiceImpl implements IAccountService {
-
     private final IAccountRepository accountRepository;
     private final UserClient userClient;
     private final IUserService userService;
@@ -43,7 +42,6 @@ public class AccountServiceImpl implements IAccountService {
         this.userService = userService;
         this.currencyAccountService = currencyAccountService;
     }
-
 
     @Override
     public Account findById(Long id) {
@@ -72,11 +70,9 @@ public class AccountServiceImpl implements IAccountService {
             user.setLastName(userRepresentation.get(0).getLastName());
             user.setCountry(userRepresentation.get(0).firstAttribute("country"));
 
-
             Account account = new Account();
             AccountDetail accountDetail = new AccountDetail();
             CurrencyAccount currencyAccount = setCurrencyAccount(userRepresentation.get(0).firstAttribute("country"), currencyAccountService);
-
 
             accountDetail.setBalance(INIT_CAPITAL);
             accountDetail.setCreateAt(new DateTimeAtCreation(new Date()).getValue());
@@ -112,14 +108,15 @@ public class AccountServiceImpl implements IAccountService {
     public void deleteAccount(Long id) {
 
     }
+
     @Override
     public void processTransaction(String sourceAccountRef, String destinationAccountRef, BigDecimal amount, String TransactionType) {
 
     }
 
     @Override
-    public void reloadAccount(String accountRef, BigDecimal amount) {
-        Account account = validateAccount(accountRef);
+    public BigDecimal reloadFunds(String accountRef, BigDecimal amount, String token) {
+        Account account = validateAccount(accountRef, token);
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Reload a positive amount of money");
         }
@@ -130,12 +127,13 @@ public class AccountServiceImpl implements IAccountService {
         } else {
             throw new RuntimeException("An error occurred while reloading the account");
         }
+        return account.getAccountDetail().getBalance();
     }
 
 
     @Override
-    public void withdrawMoney(String accountRef, BigDecimal amount) {
-        Account account = validateAccount(accountRef);
+    public BigDecimal withdrawFunds(String accountRef, BigDecimal amount, String token) {
+        Account account = validateAccount(accountRef, token);
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Withdraw a positive amount of money");
         }
@@ -149,13 +147,15 @@ public class AccountServiceImpl implements IAccountService {
         } else {
             throw new RuntimeException("An error occurred while reloading the account");
         }
+        return account.getAccountDetail().getBalance();
     }
 
     @Override
-    public Account validateAccount(String accountRef) {
+    public Account validateAccount(String accountRef, String token) {
         Account account = null;
+        String username = extractPreferredUsername(token);
         User user = userService.findUserByAccountRef(accountRef);
-        if (validateAccountByUsername(user.getUserName())) {
+        if (validateAccountByUsername(user.getUserName(), username)) {
             if (accountRepository.existsAccountByAccountRef(accountRef)) {
                 account = accountRepository.findAccountByAccountRef(accountRef);
                 if (account.getAccountRef().isEmpty()) {
@@ -166,18 +166,20 @@ public class AccountServiceImpl implements IAccountService {
         return account;
     }
 
-    public Boolean validateAccountByUsername(String username) {
-        return accountRepository.existsAccountByUsername(username) && !username.isEmpty();
+    public Boolean validateAccountByUsername(String username, String tokenUsername) {
+        boolean response = false;
+        if (!username.isEmpty() && !tokenUsername.isEmpty()) {
+            response = accountRepository.existsAccountByUsername(username) && username.equals(tokenUsername);
+        }
+        return response;
     }
 
-
     @Override
-    public Set<Account> getAccountsByUsername(String username) {
+    public Set<Account> getAccountsByUsername(String username, String tokenUsername) {
         Set<Account> accountSet = new HashSet<>();
-        if (validateAccountByUsername(username) && !username.isEmpty()) {
+        if (validateAccountByUsername(username,tokenUsername) && !username.isEmpty()) {
             accountSet = accountRepository.findAccountsByUsername(username);
         }
-        ;
         return accountSet;
     }
 

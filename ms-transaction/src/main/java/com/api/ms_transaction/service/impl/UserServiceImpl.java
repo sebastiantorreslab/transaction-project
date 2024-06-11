@@ -4,6 +4,7 @@ import com.api.ms_transaction.model.User;
 import com.api.ms_transaction.repository.IUserRepository;
 import com.api.ms_transaction.service.IUserService;
 import org.keycloak.representations.account.UserRepresentation;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,8 +55,8 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public User findUserByAccountRef(String accountRef) {
-        return null;
+    public User findUserByAccountRef(@Param("accountRef") String accountRef) {
+        return userRepository.findUserByAccountRef(accountRef);
     }
 
 
