@@ -111,77 +111,71 @@ public class AccountServiceImpl implements IAccountService {
     @Override
     public BigDecimal processTransaction(String originCurrency, String targetCurrency, String sourceAccountRef, String destinationAccountRef, BigDecimal amount, String transactionType, String token) {
 
-            if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Must transfer a positive amount of money");
-            }
-
-            Account fromAccount;
-            Account toAccount;
-            BigDecimal newSourceBalance = null;
-
-            fromAccount = validateAccount(sourceAccountRef,token);
-            if(fromAccount.getAccountRef().isEmpty()){
-                throw new RuntimeException("Source account not found");
-            }
-            toAccount = validateAccount(destinationAccountRef,token);
-            if(toAccount.getAccountRef().isEmpty()){
-                throw new RuntimeException("Destination account not found");
-            }
-            if(Objects.equals(targetCurrency, "") && Objects.equals(targetCurrency, "")){
-                throw new RuntimeException("Currency does not exist");
-            }
-
-            if(fromAccount.getAccountDetail().getIsEnabled() && toAccount.getAccountDetail().getIsEnabled()){
-                if(fromAccount.getAccountRef().equals(sourceAccountRef) && toAccount.getAccountRef().equals(destinationAccountRef)){
-                    if (validationBalance(fromAccount,amount)) {
-
-                        Transaction transaction = new Transaction();
-                        transaction.setCurrencyOrigin(originCurrency);
-                        transaction.setCurrencyDestination(targetCurrency);
-                        transaction.setCreateAt(new DateTimeAtCreation(new Date()).getValue());
-                        transaction.setAmount(amount);
-                        transaction.setTransactionType(transactionType); // todo implement a method for validate internal transfer accounts from the same user or external different users
-                        BigDecimal convertedValue =  currencyConverter(amount,originCurrency,targetCurrency);
-                        transaction.setConvertedAmount(convertedValue);
-                        transaction.setCreatedBy(userService.findUserByAccountRef(fromAccount.getAccountRef()).getUserName());
-
-                        try{
-                            BigDecimal currentFromBalance = fromAccount.getAccountDetail().getBalance();
-                            fromAccount.getAccountDetail().setBalance(currentFromBalance.subtract(amount));
-                            if(!Objects.equals(originCurrency, targetCurrency)  && isCurrencyCodeAvailable(targetCurrency,toAccount)) {
-                                return setTransaction(fromAccount, toAccount, transaction, convertedValue);
-                            }else if(!isCurrencyCodeAvailable(targetCurrency,toAccount)){
-                                throw new RuntimeException("Currency is no available in this account");
-                            }else {
-                                return setTransaction(fromAccount, toAccount, transaction, amount);
-                            }
-                        }catch(Exception e){
-                            e.getCause();
-                        }
-
-                    }else if(!validationBalance(fromAccount,amount)){
-                        throw new RuntimeException("Insufficient founds");
-                    }
-                }
-            }
-            return null;
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Must transfer a positive amount of money");
         }
 
-    private BigDecimal setTransaction(Account fromAccount, Account toAccount,Transaction transaction, BigDecimal value) {
+        Account fromAccount;
+        Account toAccount;
+
+        fromAccount = validateAccount(sourceAccountRef, token);
+        if (fromAccount.getAccountRef().isEmpty()) {
+            throw new RuntimeException("Source account not found");
+        }
+        toAccount = validateAccount(destinationAccountRef, token);
+        if (toAccount.getAccountRef().isEmpty()) {
+            throw new RuntimeException("Destination account not found");
+        }
+        if (Objects.equals(originCurrency, "") && Objects.equals(targetCurrency, "")) {
+            throw new RuntimeException("Currency does not exist");
+        }
+
+        if (fromAccount.getAccountDetail().getIsEnabled() && toAccount.getAccountDetail().getIsEnabled()) {
+            if (fromAccount.getAccountRef().equals(sourceAccountRef) && toAccount.getAccountRef().equals(destinationAccountRef)) {
+                if (validationBalance(fromAccount, amount)) {
+
+                    Transaction transaction = new Transaction();
+                    transaction.setCurrencyOrigin(originCurrency);
+                    transaction.setCurrencyDestination(targetCurrency);
+                    transaction.setCreateAt(new DateTimeAtCreation(new Date()).getValue());
+                    transaction.setAmount(amount);
+                    transaction.setTransactionType(transactionType); // todo implement a method for validate internal transfer accounts from the same user or external different users
+                    BigDecimal convertedValue = currencyConverter(amount, originCurrency, targetCurrency);// //todo: controlar nulos aqui por si divisa no existe
+                    transaction.setConvertedAmount(convertedValue);
+                    transaction.setCreatedBy(userService.findUserByAccountRef(fromAccount.getAccountRef()).getUserName());
+
+                    try {
+                        BigDecimal currentFromBalance = fromAccount.getAccountDetail().getBalance();
+                        fromAccount.getAccountDetail().setBalance(currentFromBalance.subtract(amount));
+                        if (!Objects.equals(originCurrency, targetCurrency) && isCurrencyCodeAvailable(targetCurrency, toAccount)) {
+                            return setTransaction(fromAccount, toAccount, transaction, convertedValue);
+                        } else if (!isCurrencyCodeAvailable(targetCurrency, toAccount)) {
+                            throw new RuntimeException("Currency is no available in this account");
+                        } else {
+                            return setTransaction(fromAccount, toAccount, transaction, amount);
+                        }
+                    } catch (Exception e) {
+                        e.getCause();
+                    }
+
+                } else if (!validationBalance(fromAccount, amount)) {
+                    throw new RuntimeException("Insufficient founds");
+                }
+            }
+        }
+        return null;
+    }
+
+    private BigDecimal setTransaction(Account fromAccount, Account toAccount, Transaction transaction, BigDecimal value) {
         BigDecimal currentToBalance = toAccount.getAccountDetail().getBalance();
         toAccount.getAccountDetail().setBalance(currentToBalance.add(value));
         transaction.setConvertedAmount(value);
         transaction.setStatus("1");
-        fromAccount.getAccountDetail().add(transaction,fromAccount,toAccount);
+        fromAccount.getAccountDetail().add(transaction, fromAccount, toAccount);
         accountRepository.save(fromAccount);
         accountRepository.save(toAccount);
         return fromAccount.getAccountDetail().getBalance();
     }
-
-    ;
-
-
-
 
 
     @Override
@@ -251,13 +245,13 @@ public class AccountServiceImpl implements IAccountService {
     @Override
     public Set<Account> getAccountsByUsername(String username, String tokenUsername) {
         Set<Account> accountSet = new HashSet<>();
-        if (validateAccountByUsername(username,tokenUsername) && !username.isEmpty()) {
+        if (validateAccountByUsername(username, tokenUsername) && !username.isEmpty()) {
             accountSet = accountRepository.findAccountsByUsername(username);
         }
         return accountSet;
     }
 
-    public Boolean isCurrencyCodeAvailable(String destinationCurrency, Account account){
+    public Boolean isCurrencyCodeAvailable(String destinationCurrency, Account account) {
         return account.getAccountDetail().getAccountCurrency().getCode().equals(destinationCurrency);
     }
 
